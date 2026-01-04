@@ -37,6 +37,23 @@ def create_app(model: Any, loader: ModelLoader, model_name: str) -> FastAPI:
     # Get model metadata once at startup
     metadata = loader.get_metadata(model)
 
+    # Create framework-specific request model
+    framework = metadata.get("framework", "")
+    if framework == "huggingface-transformers":
+        # Text-based input for HuggingFace models
+        from pydantic import BaseModel, Field
+        from typing import Union, List
+
+        class PredictRequest(BaseModel):
+            features: Union[str, List[str]] = Field(
+                ...,
+                description="Text input for prediction",
+                examples=["This product is amazing!"]
+            )
+    else:
+        # Numeric input for sklearn/pytorch/tensorflow
+        from shipml.models import PredictRequest
+
     @app.get("/", include_in_schema=False)
     async def root():
         """Root endpoint - redirect to docs."""

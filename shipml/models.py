@@ -5,15 +5,12 @@ from pydantic import BaseModel, Field
 
 
 class PredictRequest(BaseModel):
-    """Request model for predictions."""
+    """Request model for predictions (numeric models: sklearn, pytorch, tensorflow)."""
 
-    features: Union[List[float], List[List[float]], Dict[str, Any], str, List[str]] = Field(
+    features: Union[List[float], List[List[float]], Dict[str, Any]] = Field(
         ...,
-        description="Input features for prediction. Can be numeric (sklearn/pytorch) or text (huggingface).",
-        examples=[
-            [1.0, 2.0, 3.0, 4.0],  # Numeric features
-            "This is a great product!",  # Text input (HuggingFace)
-        ],
+        description="Numeric input features for prediction",
+        examples=[[1.0, 2.0, 3.0, 4.0]],
     )
 
 
