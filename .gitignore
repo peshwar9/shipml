@@ -1,0 +1,74 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# uv
+.uv/
+uv.lock
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Model files (for testing)
+*.pkl
+*.joblib
+*.pt
+*.pth
+*.h5
+*.keras
+SavedModel/
+
+# Logs
+*.log
+
+# Internal planning and development docs (not for public repo)
+TECHNICAL_SPEC.md
+PHASE1_TECHNICAL_SPEC.md
+GETTING_STARTED.md
+HUGGINGFACE_TEST_RESULTS.md
+CLI_FIX.md
+
+# Downloaded HuggingFace models (too large for git)
+examples/sentiment-model/
+
+# Benchmark artifacts
+test_*.pkl
+benchmark_results.json

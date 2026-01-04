@@ -1,0 +1,94 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "shipml"
+version = "0.1.0"
+description = "Turn ML models into APIs with one command"
+authors = [{name = "Prabhueshwar La", email = "prabhueshwarla@example.com"}]
+license = {text = "MIT"}
+readme = "README.md"
+requires-python = ">=3.8"
+keywords = ["machine-learning", "api", "deployment", "fastapi", "ml", "model-serving"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Education",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
+dependencies = [
+    "click>=8.0",
+    "fastapi>=0.104",
+    "uvicorn[standard]>=0.24",
+    "pydantic>=2.0",
+    "python-multipart>=0.0.6",
+]
+
+[project.optional-dependencies]
+sklearn = ["scikit-learn>=1.0", "joblib>=1.0"]
+pytorch = ["torch>=2.0"]
+tensorflow = ["tensorflow>=2.13"]
+xgboost = ["xgboost>=2.0"]
+lightgbm = ["lightgbm>=4.0"]
+huggingface = ["transformers>=4.30", "torch>=2.0"]
+all = [
+    "scikit-learn>=1.0",
+    "joblib>=1.0",
+    "torch>=2.0",
+    "tensorflow>=2.13",
+    "xgboost>=2.0",
+    "lightgbm>=4.0",
+    "transformers>=4.30",
+]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "black>=23.0",
+    "mypy>=1.0",
+    "ruff>=0.1",
+    "httpx>=0.25",  # For testing FastAPI
+]
+
+[project.scripts]
+shipml = "shipml.cli:cli"
+
+[project.urls]
+Homepage = "https://github.com/prabhueshwarla/shipml"
+Documentation = "https://github.com/prabhueshwarla/shipml#readme"
+Repository = "https://github.com/prabhueshwarla/shipml"
+Issues = "https://github.com/prabhueshwarla/shipml/issues"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["shipml*"]
+
+[tool.black]
+line-length = 100
+target-version = ['py38', 'py39', 'py310', 'py311']
+
+[tool.ruff]
+line-length = 100
+target-version = "py38"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --cov=shipml --cov-report=term-missing"
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
