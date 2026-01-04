@@ -14,13 +14,12 @@ class SklearnLoader(ModelLoader):
     def load(self, model_path: Path) -> Any:
         """Load sklearn model from pickle/joblib file."""
         try:
-            # Try joblib first (recommended for sklearn)
-            if model_path.suffix == ".joblib":
+            # Try joblib first (recommended for sklearn models)
+            try:
                 import joblib
-
                 return joblib.load(model_path)
-            else:
-                # Fallback to pickle
+            except Exception:
+                # Fallback to pickle for models saved with pickle
                 with open(model_path, "rb") as f:
                     return pickle.load(f)
         except ImportError as e:
