@@ -37,15 +37,16 @@ dependencies = [
 [project.optional-dependencies]
 sklearn = ["scikit-learn>=1.0", "joblib>=1.0"]
 pytorch = ["torch>=2.0"]
-tensorflow = ["tensorflow>=2.13"]
+tensorflow = ["tensorflow>=2.13", "tf-keras>=2.16"]
 xgboost = ["xgboost>=2.0"]
 lightgbm = ["lightgbm>=4.0"]
-huggingface = ["transformers>=4.30", "torch>=2.0"]
+huggingface = ["transformers>=4.30", "torch>=2.0", "tf-keras>=2.16"]
 all = [
     "scikit-learn>=1.0",
     "joblib>=1.0",
     "torch>=2.0",
     "tensorflow>=2.13",
+    "tf-keras>=2.16",
     "xgboost>=2.0",
     "lightgbm>=4.0",
     "transformers>=4.30",
