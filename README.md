@@ -405,7 +405,7 @@ curl -X POST http://localhost:8000/predict \
 
 ## Performance
 
-Benchmark results for different model types:
+### Benchmarks
 
 | Model Type | Load Time | Prediction (avg) | Notes |
 |------------|-----------|------------------|-------|
@@ -416,7 +416,17 @@ Benchmark results for different model types:
 
 **Hardware:** MacBook Pro M1, 16GB RAM, CPU only
 
-See [PERFORMANCE.md](PERFORMANCE.md) for detailed benchmarks.
+### Built-in Optimizations
+
+ShipML includes sensible defaults that work out-of-the-box:
+- ✅ **Batch processing** - All loaders support batch inputs efficiently
+- ✅ **Model eval mode** - PyTorch models loaded with `model.eval()`
+- ✅ **CPU-optimized** - HuggingFace uses CPU-optimized pipelines
+- ✅ **Framework defaults** - Leverages sklearn, PyTorch, TensorFlow optimizations
+
+**Note:** ShipML is "demo-ready," not production-ready. We intentionally avoid advanced optimizations (quantization, GPU acceleration, advanced batching) to maintain simplicity. For production deployments, consider tools like TorchServe, vLLM, or Triton.
+
+See [ARCHITECTURE.md](ARCHITECTURE.md) for design decisions and when to graduate to production tools.
 
 ---
 
