@@ -68,7 +68,7 @@ class HuggingFaceLoader(ModelLoader):
             task_type = self._detect_task(config, model_path)
 
             # Load pipeline
-            pipe = pipeline(task_type, model=str(model_path), device=-1)  # CPU only
+            pipe = pipeline(task_type, model=str(model_path), device=-1)  # type: ignore[call-overload]
 
             return {"pipeline": pipe, "task": task_type}
 
@@ -83,9 +83,7 @@ class HuggingFaceLoader(ModelLoader):
         except Exception as e:
             raise ModelLoadError(f"Failed to load Hugging Face model: {e}")
 
-    def predict(
-        self, model: Any, features: Union[List[float], List[List[float]], str, List[str]]
-    ) -> Dict[str, Any]:
+    def predict(self, model: Any, features: Any) -> Dict[str, Any]:
         """
         Run prediction with Hugging Face pipeline.
 
@@ -115,7 +113,7 @@ class HuggingFaceLoader(ModelLoader):
                 )
         elif isinstance(features, str):
             # Single string
-            inputs = features
+            inputs = features  # type: ignore[assignment]
         else:
             raise ValidationError(
                 "Invalid input format for Hugging Face model.\n\n"

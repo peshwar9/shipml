@@ -44,7 +44,7 @@ def create_app(model: Any, loader: ModelLoader, model_name: str, pipeline: Any =
         from pydantic import RootModel
         from typing import Dict, Any
 
-        class PredictRequest(RootModel[Dict[str, Any]]):
+        class PredictRequest(RootModel[Dict[str, Any]]):  # type: ignore[no-redef]
             """Flexible request model for custom pipelines - accepts any JSON."""
 
             root: Dict[str, Any]
@@ -57,7 +57,7 @@ def create_app(model: Any, loader: ModelLoader, model_name: str, pipeline: Any =
             from pydantic import BaseModel, Field
             from typing import Union, List
 
-            class PredictRequest(BaseModel):
+            class PredictRequest(BaseModel):  # type: ignore[no-redef]
                 features: Union[str, List[str]] = Field(
                     ...,
                     description="Text input for prediction",
@@ -66,7 +66,7 @@ def create_app(model: Any, loader: ModelLoader, model_name: str, pipeline: Any =
 
         else:
             # Numeric input for sklearn/pytorch/tensorflow
-            from shipml.models import PredictRequest
+            from shipml.models import PredictRequest  # type: ignore[assignment]
 
     @app.get("/", include_in_schema=False)
     async def root():
@@ -172,8 +172,8 @@ def create_app(model: Any, loader: ModelLoader, model_name: str, pipeline: Any =
                     return {"result": result, "model_name": model_name}
             else:
                 # Default behavior - use loader
-                loader.validate_input(model, request.features)
-                result = loader.predict(model, request.features)
+                loader.validate_input(model, request.features)  # type: ignore[attr-defined]
+                result = loader.predict(model, request.features)  # type: ignore[attr-defined]
                 result["model_name"] = model_name
                 return result
 

@@ -25,15 +25,13 @@ class ModelLoader(ABC):
         pass
 
     @abstractmethod
-    def predict(
-        self, model: Any, features: Union[List[float], List[List[float]]]
-    ) -> Dict[str, Any]:
+    def predict(self, model: Any, features: Any) -> Dict[str, Any]:
         """
         Run prediction on input features.
 
         Args:
             model: Loaded model object
-            features: Input features (single sample or batch)
+            features: Input features (numeric arrays for sklearn/pytorch/tensorflow, text for huggingface)
 
         Returns:
             Dictionary with prediction results
@@ -57,13 +55,13 @@ class ModelLoader(ABC):
         pass
 
     @abstractmethod
-    def validate_input(self, model: Any, features: Union[List[float], List[List[float]]]) -> None:
+    def validate_input(self, model: Any, features: Any) -> None:
         """
         Validate input shape/format.
 
         Args:
             model: Loaded model object
-            features: Input features to validate
+            features: Input features to validate (type depends on framework)
 
         Raises:
             ValidationError: If input is invalid
