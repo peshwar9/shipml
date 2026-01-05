@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "shipml"
 version = "0.1.0"
 description = "Turn ML models into APIs with one command"
-authors = [{name = "Prabhueshwar La", email = "prabhueshwarla@example.com"}]
+authors = [{name = "Prabhu Eshwarla", email = "dev@peshwarla.com"}]
 license = {text = "MIT"}
 readme = "README.md"
 requires-python = ">=3.8"
