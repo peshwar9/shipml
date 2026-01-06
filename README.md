@@ -49,7 +49,7 @@ curl -X POST http://localhost:8000/predict \
 ```
 
 **📖 See [QUICKSTART.md](https://github.com/sudhanvalabs/mlship/blob/main/QUICKSTART.md)** for complete hands-on examples with:
-- HuggingFace models (sentiment, GPT-2, Q&A)
+- HuggingFace models (sentiment analysis, text generation)
 - Local models (sklearn, PyTorch, TensorFlow)
 - Training code, curl commands, and expected responses
 
@@ -135,7 +135,7 @@ Read [WHY_MLSHIP.md](https://github.com/sudhanvalabs/mlship/blob/main/WHY_MLSHIP
 ## Documentation
 
 - **[QUICKSTART.md](https://github.com/sudhanvalabs/mlship/blob/main/QUICKSTART.md)** - 🚀 **Start here!** Complete hands-on guide with:
-  - HuggingFace Hub examples (sentiment analysis, GPT-2, Q&A)
+  - HuggingFace Hub examples (sentiment analysis, text generation)
   - Local model examples (sklearn, PyTorch, TensorFlow)
   - Training code, curl commands, and expected responses
   - Perfect for first-time users and students

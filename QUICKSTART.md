@@ -51,15 +51,17 @@ Download Python 3.12 from [python.org/downloads](https://www.python.org/download
 **Always use a virtual environment** to avoid conflicts with other Python projects:
 
 ```bash
-# Create a directory for your project
-mkdir my-mlship-project
-cd my-mlship-project
+# Create test env with Python 3.12
+  mkdir ~/test-mlship && cd ~/test-mlship
+  python3.12 -m venv test_env
 
-# Create virtual environment with Python 3.12
-python3.12 -m venv venv
+# Activate it
+  source test_env/bin/activate
 
-# If python3.12 is your default Python 3:
-python3 -m venv venv
+  # Verify it's Python 3.12
+python --version  # Should show Python 3.12.x
+
+
 
 # Activate the virtual environment
 # macOS/Linux:
@@ -213,34 +215,9 @@ curl -X POST http://localhost:8000/predict \
 
 ---
 
-### Example 3: Question Answering
-
-**Serve:**
-```bash
-mlship serve distilbert-base-cased-distilled-squad --source huggingface
-```
-
-**Test:**
-```bash
-curl -X POST http://localhost:8000/predict \
-  -H "Content-Type: application/json" \
-  -d '{"features": {"question": "What is mlship?", "context": "mlship is a tool that turns ML models into REST APIs with one command. It supports sklearn, PyTorch, TensorFlow, and HuggingFace models."}}'
-```
-
-**Expected Response:**
-```json
-{
-  "prediction": "a tool that turns ML models into REST APIs",
-  "probability": 0.89,
-  "model_name": "distilbert-base-cased-distilled-squad"
-}
-```
-
----
-
 ## Local Model Examples
 
-### Example 4: Scikit-learn Model
+### Example 3: Scikit-learn Model
 
 **Create and train a model:**
 
@@ -289,7 +266,7 @@ curl -X POST http://localhost:8000/predict \
 
 ---
 
-### Example 5: PyTorch Model
+### Example 4: PyTorch Model
 
 **Create and train a model:**
 
@@ -342,7 +319,7 @@ curl -X POST http://localhost:8000/predict \
 
 ---
 
-### Example 6: TensorFlow/Keras Model
+### Example 5: TensorFlow/Keras Model
 
 **Create and train a model:**
 
