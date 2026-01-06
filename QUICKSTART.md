@@ -143,6 +143,21 @@ pip install 'mlship[huggingface]'
 
 This installs transformers + PyTorch which are required for HuggingFace models.
 
+### Supported HuggingFace Tasks
+
+**✅ Currently Supported:**
+- **Text Classification** (sentiment analysis, etc.) - Input: string
+- **Text Generation** (GPT-2, GPT-Neo, etc.) - Input: string
+
+**❌ Not Yet Supported:**
+- **Question Answering** - Requires dict input `{"question": "...", "context": "..."}`
+- **Translation** - May require specific input/output format
+- **Summarization** - Should work with string input (untested)
+- **Fill-Mask** - May require specific format
+- **Token Classification/NER** - May require special output handling
+
+We're working on adding support for more task types. For now, stick with text classification and generation models.
+
 ### Example 1: Sentiment Analysis
 
 **Serve:**
