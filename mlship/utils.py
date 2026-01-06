@@ -4,16 +4,23 @@ from pathlib import Path
 from typing import Union
 
 
-def get_model_size_mb(model_path: Path) -> float:
+def get_model_size_mb(model_path: Union[Path, str]) -> float:
     """
     Get model file size in megabytes.
 
     Args:
-        model_path: Path to model file or directory
+        model_path: Path to model file/directory, or model ID (returns 0.0)
 
     Returns:
         Size in MB
     """
+    # If it's a string and not a valid path, return 0 (e.g., Hub model ID)
+    if isinstance(model_path, str):
+        path_obj = Path(model_path)
+        if not path_obj.exists():
+            return 0.0
+        model_path = path_obj
+
     if model_path.is_file():
         size_bytes = model_path.stat().st_size
     elif model_path.is_dir():

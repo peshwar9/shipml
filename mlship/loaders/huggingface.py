@@ -26,15 +26,16 @@ class HuggingFaceLoader(ModelLoader):
     Model format: Directory with config.json, pytorch_model.bin, tokenizer files
     """
 
-    def load(self, model_path: Path) -> Any:
+    def load(self, model_path: Union[Path, str]) -> Any:
         """
-        Load Hugging Face model from directory.
+        Load Hugging Face model from local directory or Hub.
 
         Args:
-            model_path: Path to model directory (must contain config.json)
+            model_path: Path to model directory OR HuggingFace Hub model ID
+                       (e.g., "bert-base-uncased", "gpt2", "distilbert-base-uncased-finetuned-sst-2-english")
 
         Returns:
-            Tuple of (pipeline, task_type)
+            Dict with pipeline and task_type
 
         Raises:
             ModelLoadError: If model cannot be loaded
@@ -42,33 +43,51 @@ class HuggingFaceLoader(ModelLoader):
         try:
             from transformers import pipeline, AutoConfig
 
-            # Check if directory has required files
-            if not model_path.is_dir():
-                raise ModelLoadError(
-                    "Hugging Face models must be directories.\n\n"
-                    "Download a model first:\n"
-                    "  from transformers import AutoModel, AutoTokenizer\n"
-                    "  model = AutoModel.from_pretrained('bert-base-uncased')\n"
-                    "  tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased')\n"
-                    "  model.save_pretrained('my-model/')\n"
-                    "  tokenizer.save_pretrained('my-model/')\n\n"
-                    "Then serve:\n"
-                    "  mlship serve my-model/"
-                )
+            # Determine if it's a local path or Hub model ID
+            is_local = isinstance(model_path, Path) or (
+                isinstance(model_path, str) and Path(model_path).exists()
+            )
 
-            config_file = model_path / "config.json"
-            if not config_file.exists():
-                raise ModelLoadError(
-                    f"Missing config.json in {model_path}\n\n"
-                    "This doesn't look like a Hugging Face model directory."
-                )
+            if is_local:
+                # Convert to Path if string
+                if isinstance(model_path, str):
+                    model_path = Path(model_path)
 
-            # Detect task from config or directory name
-            config = AutoConfig.from_pretrained(str(model_path))
-            task_type = self._detect_task(config, model_path)
+                # Existing validation for local directories
+                if not model_path.is_dir():
+                    raise ModelLoadError(
+                        "Hugging Face models must be directories.\n\n"
+                        "Download a model first:\n"
+                        "  from transformers import AutoModel, AutoTokenizer\n"
+                        "  model = AutoModel.from_pretrained('bert-base-uncased')\n"
+                        "  tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased')\n"
+                        "  model.save_pretrained('my-model/')\n"
+                        "  tokenizer.save_pretrained('my-model/')\n\n"
+                        "Then serve:\n"
+                        "  mlship serve my-model/\n\n"
+                        "Or load directly from HuggingFace Hub:\n"
+                        "  mlship serve bert-base-uncased --source huggingface"
+                    )
 
-            # Load pipeline
-            pipe = pipeline(task_type, model=str(model_path), device=-1)  # type: ignore[call-overload]
+                config_file = model_path / "config.json"
+                if not config_file.exists():
+                    raise ModelLoadError(
+                        f"Missing config.json in {model_path}\n\n"
+                        "This doesn't look like a Hugging Face model directory."
+                    )
+
+                model_identifier = str(model_path)
+            else:
+                # It's a Hub model ID (string like "bert-base-uncased")
+                model_identifier = model_path
+
+            # Load config (works for both local and Hub)
+            config = AutoConfig.from_pretrained(model_identifier)
+            task_type = self._detect_task(config, model_identifier)
+
+            # Load pipeline - transformers handles download automatically for Hub models
+            # Progress bars are shown by default via tqdm
+            pipe = pipeline(task_type, model=model_identifier, device=-1)  # type: ignore[call-overload]
 
             return {"pipeline": pipe, "task": task_type}
 
@@ -161,8 +180,8 @@ class HuggingFaceLoader(ModelLoader):
 
     # Helper methods
 
-    def _detect_task(self, config: Any, model_path: Path) -> str:
-        """Detect task type from config or directory name."""
+    def _detect_task(self, config: Any, model_identifier: Union[Path, str]) -> str:
+        """Detect task type from config or model identifier."""
         # Try to infer from model architecture
         arch = config.architectures[0] if config.architectures else ""
 

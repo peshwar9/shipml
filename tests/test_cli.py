@@ -32,6 +32,8 @@ def test_serve_help():
     assert result.exit_code == 0
     assert "MODEL_FILE" in result.output
     assert "--port" in result.output
+    assert "--source" in result.output
+    assert "huggingface" in result.output
 
 
 def test_serve_nonexistent_file():

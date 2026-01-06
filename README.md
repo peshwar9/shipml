@@ -11,6 +11,8 @@ Deploy your machine learning models locally in seconds—no Docker, no YAML, no 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 
+> **Why mlship?** See our [positioning document](WHY_MLSHIP.md) for how mlship compares to transformers-serve, vLLM, Ollama, and BentoML.
+
 ---
 
 ## Features
@@ -18,7 +20,8 @@ Deploy your machine learning models locally in seconds—no Docker, no YAML, no 
 - ✅ **One-command deployment** - No configuration needed
 - ✅ **Works offline** - Zero internet dependency after installation
 - ✅ **Auto-generated API** - REST API with interactive docs
-- ✅ **Multi-framework** - Supports scikit-learn, PyTorch, TensorFlow, Hugging Face
+- ✅ **Multi-framework** - Supports scikit-learn, PyTorch, TensorFlow, **and HuggingFace** (local + Hub)
+- ✅ **HuggingFace Hub integration** - Serve models directly from Hub without downloading
 - ✅ **Platform agnostic** - Works on macOS, Windows, and Linux
 - ✅ **Fast** - Deploy in seconds, predictions in milliseconds
 - ✅ **Demo-ready** - Input validation, error handling, health checks for local testing
@@ -127,14 +130,60 @@ Open http://localhost:8000/docs in your browser for Swagger UI with interactive 
 
 ## Supported Frameworks
 
-| Framework | File Extensions | Example |
-|-----------|----------------|---------|
+| Framework | File Extensions / Source | Example |
+|-----------|-------------------------|---------|
 | **Scikit-learn** | `.pkl`, `.joblib` | `mlship serve model.pkl` |
 | **PyTorch** | `.pt`, `.pth` | `mlship serve model.pt` |
 | **TensorFlow/Keras** | `.h5`, `.keras`, `SavedModel/` | `mlship serve model.h5` |
-| **Hugging Face** | Model directory | `mlship serve sentiment-model/` |
+| **Hugging Face (Local)** | Model directory | `mlship serve sentiment-model/` |
+| **Hugging Face (Hub)** | Model ID | `mlship serve bert-base-uncased --source huggingface` |
 | **XGBoost** | `.json`, `.pkl` | Coming soon |
 | **LightGBM** | `.txt`, `.pkl` | Coming soon |
+
+---
+
+## HuggingFace Hub Support
+
+Serve models directly from HuggingFace Hub without downloading them first:
+
+```bash
+# Serve a text classification model
+mlship serve distilbert-base-uncased-finetuned-sst-2-english --source huggingface
+
+# Serve GPT-2 for text generation
+mlship serve gpt2 --source huggingface --port 5000
+
+# Serve any HuggingFace model
+mlship serve <model-id> --source huggingface
+```
+
+**What happens:**
+- mlship downloads the model on first use (with progress bars)
+- Model is cached locally in `~/.cache/huggingface/` for faster subsequent loads
+- No manual model download or setup required
+
+**Test it:**
+```bash
+curl -X POST http://localhost:8000/predict \
+  -H "Content-Type: application/json" \
+  -d '{"features": "This product is amazing!"}'
+```
+
+Response:
+```json
+{
+  "prediction": "POSITIVE",
+  "probability": 0.9998,
+  "model_name": "distilbert-base-uncased-finetuned-sst-2-english"
+}
+```
+
+**Note:** You need transformers installed:
+```bash
+pip install mlship[huggingface]
+# or
+pip install mlship transformers
+```
 
 ---
 

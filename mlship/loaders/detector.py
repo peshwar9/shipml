@@ -1,24 +1,34 @@
 """Framework detection and loader factory."""
 
 from pathlib import Path
+from typing import Union
 
 from mlship.errors import UnsupportedModelError
 from mlship.loaders.base import ModelLoader
 
 
-def detect_framework(model_path: Path) -> str:
+def detect_framework(model_path: Union[Path, str], source: str = "local") -> str:
     """
-    Detect ML framework from file extension and content.
+    Detect ML framework from file extension, content, or source flag.
 
     Args:
-        model_path: Path to model file or directory
+        model_path: Path to model file/directory OR model ID (e.g., "bert-base-uncased")
+        source: Model source - "local" (default) or "huggingface"
 
     Returns:
-        Framework name: 'sklearn' | 'pytorch' | 'tensorflow' | 'xgboost' | 'lightgbm'
+        Framework name: 'sklearn' | 'pytorch' | 'tensorflow' | 'xgboost' | 'lightgbm' | 'huggingface'
 
     Raises:
         UnsupportedModelError: If framework cannot be detected
     """
+    # Handle HuggingFace Hub models
+    if source == "huggingface":
+        return "huggingface"
+
+    # Convert string to Path for local models
+    if isinstance(model_path, str):
+        model_path = Path(model_path)
+
     if not model_path.exists():
         raise UnsupportedModelError(f"Model path does not exist: {model_path}")
 

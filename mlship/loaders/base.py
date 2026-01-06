@@ -1,7 +1,7 @@
 """Base interface for model loaders."""
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict
+from typing import Any, Dict, Union
 from pathlib import Path
 
 
@@ -9,12 +9,12 @@ class ModelLoader(ABC):
     """Base interface for all model loaders."""
 
     @abstractmethod
-    def load(self, model_path: Path) -> Any:
+    def load(self, model_path: Union[Path, str]) -> Any:
         """
-        Load model from file.
+        Load model from file or model ID.
 
         Args:
-            model_path: Path to model file or directory
+            model_path: Path to model file/directory OR model ID (e.g., "bert-base-uncased" for HuggingFace Hub)
 
         Returns:
             Loaded model object

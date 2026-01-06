@@ -10,8 +10,12 @@ from mlship.loaders.base import ModelLoader
 class PyTorchLoader(ModelLoader):
     """Loader for PyTorch models."""
 
-    def load(self, model_path: Path) -> Any:
+    def load(self, model_path: Union[Path, str]) -> Any:
         """Load PyTorch model from .pt/.pth file."""
+        # Convert to Path if string
+        if isinstance(model_path, str):
+            model_path = Path(model_path)
+
         try:
             import torch
 

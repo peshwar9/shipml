@@ -38,7 +38,7 @@ def cli(ctx, version):
 
 
 @cli.command()
-@click.argument("model_file", type=click.Path(exists=True))
+@click.argument("model_file", type=str)
 @click.option("--port", default=8000, type=int, help="Port to run server on (default: 8000)")
 @click.option("--host", default="127.0.0.1", type=str, help="Host to bind to (default: 127.0.0.1)")
 @click.option("--name", default=None, type=str, help="Model name for display")
@@ -49,11 +49,21 @@ def cli(ctx, version):
     help="Custom pipeline class (e.g. pipeline.SentimentPipeline)",
 )
 @click.option("--reload", is_flag=True, help="Enable auto-reload on file changes (dev mode)")
-def serve(model_file: str, port: int, host: str, name: str, pipeline: str, reload: bool):
+@click.option(
+    "--source",
+    type=click.Choice(["local", "huggingface"], case_sensitive=False),
+    default="local",
+    help="Model source: 'local' for file paths (default) or 'huggingface' for Hub models",
+)
+def serve(
+    model_file: str, port: int, host: str, name: str, pipeline: str, reload: bool, source: str
+):
     """
     Start API server for your ML model.
 
-    MODEL_FILE can be a path to a trained model file (.pkl, .pt, .h5, etc.)
+    MODEL_FILE can be:
+      - Path to a trained model file (.pkl, .pt, .h5, etc.) [--source local]
+      - HuggingFace Hub model ID (e.g., 'bert-base-uncased') [--source huggingface]
 
     Examples:
 
@@ -64,31 +74,68 @@ def serve(model_file: str, port: int, host: str, name: str, pipeline: str, reloa
       mlship serve model.h5 --name "sentiment-analyzer"
 
       mlship serve model.pt --reload  # Development mode
+
+      mlship serve bert-base-uncased --source huggingface
+
+      mlship serve distilbert-base-uncased-finetuned-sst-2-english --source huggingface
+
+      mlship serve gpt2 --source huggingface --port 5000
     """
-    model_path = Path(model_file)
-    model_name = name or model_path.stem
+    # Handle local vs Hub models
+    if source == "local":
+        # Validate that local path exists
+        model_path_obj = Path(model_file)
+        if not model_path_obj.exists():
+            click.echo()
+            click.secho("❌ Error: File Not Found", fg="red", bold=True, err=True)
+            click.echo()
+            click.echo(f"The model file does not exist: {model_file}", err=True)
+            click.echo()
+            click.echo("If you're trying to load from HuggingFace Hub, use:", err=True)
+            click.echo(f"  mlship serve {model_file} --source huggingface", err=True)
+            click.echo()
+            sys.exit(1)
+
+        model_path = model_path_obj
+        model_name = name or model_path_obj.stem
+    else:  # source == "huggingface"
+        # For Hub models, keep as string
+        model_path = model_file
+        # Extract name from model ID (e.g., "bert-base-uncased" or "org/model" -> "model")
+        model_name = name or model_file.split("/")[-1]
 
     # Display header
     click.echo()
     click.secho("🚀 mlship", fg="blue", bold=True)
-    click.echo(f"   Loading model: {model_path.name}")
+    if source == "huggingface":
+        click.echo(f"   Loading model from Hub: {model_file}")
+    else:
+        click.echo(f"   Loading model: {Path(model_file).name}")
     click.echo()
 
     try:
         # Step 1: Detect framework
         click.echo("🔍 Detecting framework...", nl=False)
-        framework = detect_framework(model_path)
+        framework = detect_framework(model_path, source=source)
         click.secho(f" ✓ {framework}", fg="green")
 
         # Step 2: Load model
-        click.echo("📦 Loading model...", nl=False)
+        if source == "huggingface":
+            click.echo("📦 Loading model from HuggingFace Hub...", nl=False)
+        else:
+            click.echo("📦 Loading model...", nl=False)
         loader = get_loader(framework)
         model = loader.load(model_path)
         click.secho(" ✓ Success", fg="green")
 
         # Step 3: Get metadata
         metadata = loader.get_metadata(model)
-        model_size = get_model_size_mb(model_path)
+
+        # For Hub models, size calculation needs special handling
+        if source == "huggingface" and isinstance(model_path, str):
+            model_size = 0.0
+        else:
+            model_size = get_model_size_mb(model_path)
 
         # Display model info
         click.echo()
@@ -96,11 +143,14 @@ def serve(model_file: str, port: int, host: str, name: str, pipeline: str, reloa
         click.echo(f"   Name:       {model_name}")
         click.echo(f"   Type:       {metadata.get('model_type', 'Unknown')}")
         click.echo(f"   Framework:  {metadata.get('framework', 'Unknown')}")
+        if source == "huggingface":
+            click.echo("   Source:     HuggingFace Hub")
         if "input_features" in metadata:
             click.echo(f"   Features:   {metadata['input_features']}")
         if "output_type" in metadata:
             click.echo(f"   Task:       {metadata['output_type']}")
-        click.echo(f"   Size:       {model_size:.2f} MB")
+        if model_size > 0:
+            click.echo(f"   Size:       {model_size:.2f} MB")
         click.echo()
 
         # Step 4: Load custom pipeline if provided
@@ -125,9 +175,13 @@ def serve(model_file: str, port: int, host: str, name: str, pipeline: str, reloa
                 pipeline_class = getattr(module, class_name)
 
                 # Instantiate pipeline with model path
-                pipeline_instance = pipeline_class(
-                    str(model_path.parent if model_path.is_file() else model_path)
-                )
+                # For Hub models, pass the model ID string; for local, pass the directory
+                if isinstance(model_path, Path):
+                    pipeline_path = str(model_path.parent if model_path.is_file() else model_path)
+                else:
+                    # Hub model ID
+                    pipeline_path = model_path
+                pipeline_instance = pipeline_class(pipeline_path)
 
                 click.secho(" ✓ Success", fg="green")
             except Exception as e:

@@ -11,8 +11,12 @@ from mlship.loaders.base import ModelLoader
 class SklearnLoader(ModelLoader):
     """Loader for scikit-learn models."""
 
-    def load(self, model_path: Path) -> Any:
+    def load(self, model_path: Union[Path, str]) -> Any:
         """Load sklearn model from pickle/joblib file."""
+        # Convert to Path if string
+        if isinstance(model_path, str):
+            model_path = Path(model_path)
+
         try:
             # Try joblib first (recommended for sklearn models)
             try:
