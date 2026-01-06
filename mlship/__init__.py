@@ -1,6 +1,6 @@
 """mlship - Turn ML models into APIs with one command."""
 
-__version__ = "0.1.2"
+__version__ = "0.1.4"
 __author__ = "Sudhanva Labs"
 __license__ = "MIT"
 
