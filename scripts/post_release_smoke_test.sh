@@ -18,6 +18,7 @@ set -e  # Exit on error
 GREEN='\033[0;32m'
 RED='\033[0;31m'
 YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Configuration
@@ -27,6 +28,10 @@ TEST_DIR="/tmp/mlship-smoke-test-$$"
 VENV_DIR="$TEST_DIR/venv"
 SERVER_PORT=8765  # Use non-standard port to avoid conflicts
 SERVER_PID=""
+
+# Test results tracking
+declare -A TEST_RESULTS
+TEST_COUNT=0
 
 # Cleanup function
 cleanup() {
@@ -59,12 +64,19 @@ print_section() {
     echo "=========================================="
 }
 
-# Print test result
+# Print test result and track it
 print_result() {
-    if [ $1 -eq 0 ]; then
-        echo -e "${GREEN}✓ $2${NC}"
+    local status=$1
+    local test_name="$2"
+
+    TEST_COUNT=$((TEST_COUNT + 1))
+
+    if [ $status -eq 0 ]; then
+        echo -e "${GREEN}✓ $test_name${NC}"
+        TEST_RESULTS["$test_name"]="PASS"
     else
-        echo -e "${RED}✗ $2${NC}"
+        echo -e "${RED}✗ $test_name${NC}"
+        TEST_RESULTS["$test_name"]="FAIL"
         exit 1
     fi
 }
@@ -302,16 +314,73 @@ EOF
     test_prediction '{"features": "This product is amazing!"}' "prediction" "HuggingFace prediction"
 
     # Final summary
-    print_section "Smoke Test Results"
-    echo -e "${GREEN}✓ All tests passed!${NC}"
+    print_section "SMOKE TEST SUMMARY"
+
     echo ""
-    echo "Tested:"
-    echo "  ✓ scikit-learn model (.pkl)"
-    echo "  ✓ PyTorch model (.pt with TorchScript)"
-    echo "  ✓ TensorFlow model (.h5)"
-    echo "  ✓ HuggingFace Hub model"
+    echo -e "${BLUE}Test Environment:${NC}"
+    echo "  Python: $PYTHON_VERSION"
+    if [ -n "$VERSION" ]; then
+        echo "  mlship version: $VERSION"
+    else
+        echo "  mlship version: latest"
+    fi
     echo ""
-    echo -e "${GREEN}mlship is working correctly!${NC}"
+
+    echo -e "${BLUE}Test Results:${NC}"
+    echo "┌─────────────────────────────────────────────────┬──────────┐"
+    echo "│ Test Case                                       │ Status   │"
+    echo "├─────────────────────────────────────────────────┼──────────┤"
+
+    # Sort and display test results
+    for test_name in "${!TEST_RESULTS[@]}"; do
+        status="${TEST_RESULTS[$test_name]}"
+        if [ "$status" = "PASS" ]; then
+            printf "│ %-47s │ ${GREEN}%-8s${NC} │\n" "$test_name" "✓ PASS"
+        else
+            printf "│ %-47s │ ${RED}%-8s${NC} │\n" "$test_name" "✗ FAIL"
+        fi
+    done
+
+    echo "└─────────────────────────────────────────────────┴──────────┘"
+    echo ""
+
+    # Count passed/failed
+    passed=0
+    failed=0
+    for status in "${TEST_RESULTS[@]}"; do
+        if [ "$status" = "PASS" ]; then
+            passed=$((passed + 1))
+        else
+            failed=$((failed + 1))
+        fi
+    done
+
+    echo -e "${BLUE}Summary:${NC}"
+    echo "  Total tests: $TEST_COUNT"
+    echo "  Passed: $passed"
+    echo "  Failed: $failed"
+    echo ""
+
+    if [ $failed -eq 0 ]; then
+        echo -e "${GREEN}╔════════════════════════════════════════════════╗${NC}"
+        echo -e "${GREEN}║                                                ║${NC}"
+        echo -e "${GREEN}║  ✓ ALL SMOKE TESTS PASSED!                    ║${NC}"
+        echo -e "${GREEN}║                                                ║${NC}"
+        echo -e "${GREEN}║  mlship $VERSION is working correctly!         ║${NC}"
+        echo -e "${GREEN}║                                                ║${NC}"
+        echo -e "${GREEN}╚════════════════════════════════════════════════╝${NC}"
+        echo ""
+    else
+        echo -e "${RED}╔════════════════════════════════════════════════╗${NC}"
+        echo -e "${RED}║                                                ║${NC}"
+        echo -e "${RED}║  ✗ SMOKE TESTS FAILED                         ║${NC}"
+        echo -e "${RED}║                                                ║${NC}"
+        echo -e "${RED}║  Please review the errors above                ║${NC}"
+        echo -e "${RED}║                                                ║${NC}"
+        echo -e "${RED}╚════════════════════════════════════════════════╝${NC}"
+        echo ""
+        exit 1
+    fi
 }
 
 # Run main function

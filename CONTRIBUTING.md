@@ -508,6 +508,111 @@ See `PERFORMANCE.md` for current benchmarks.
 
 ---
 
+## Post-Release Smoke Test
+
+The post-release smoke test validates that a published PyPI package works correctly by installing it in a fresh environment and running through all QUICKSTART examples.
+
+### What It Tests
+
+The smoke test validates:
+- ✅ **scikit-learn models** - Creates and serves a RandomForestClassifier
+- ✅ **PyTorch models** - Creates and serves a TorchScript model
+- ✅ **TensorFlow models** - Creates and serves a Keras model
+- ✅ **HuggingFace Hub models** - Serves a model directly from HuggingFace Hub
+
+Each test:
+1. Creates a fresh virtual environment with Python 3.12
+2. Installs mlship from PyPI (not local files)
+3. Installs framework dependencies
+4. Creates/downloads model
+5. Starts mlship server
+6. Makes prediction via curl
+7. Validates response contains expected fields
+
+### Usage
+
+**Test latest version from PyPI:**
+```bash
+./scripts/post_release_smoke_test.sh
+```
+
+**Test specific version:**
+```bash
+./scripts/post_release_smoke_test.sh 0.1.5
+```
+
+### When to Run
+
+**Critical times:**
+- ⚠️ **After publishing to PyPI** - Validates the package is installable and works
+- Before creating git tag
+- Before announcing releases
+
+**Optional times:**
+- After major changes to loaders
+- Before publishing to TestPyPI (to catch issues early)
+
+### Sample Output
+
+```
+==========================================
+SMOKE TEST SUMMARY
+==========================================
+
+Test Environment:
+  Python: python3.12
+  mlship version: 0.1.5
+
+Test Results:
+┌─────────────────────────────────────────────────┬──────────┐
+│ Test Case                                       │ Status   │
+├─────────────────────────────────────────────────┼──────────┤
+│ sklearn model created                           │ ✓ PASS   │
+│ sklearn prediction                              │ ✓ PASS   │
+│ PyTorch model created                           │ ✓ PASS   │
+│ PyTorch prediction                              │ ✓ PASS   │
+│ TensorFlow model created                        │ ✓ PASS   │
+│ TensorFlow prediction                           │ ✓ PASS   │
+│ HuggingFace prediction                          │ ✓ PASS   │
+└─────────────────────────────────────────────────┴──────────┘
+
+Summary:
+  Total tests: 7
+  Passed: 7
+  Failed: 0
+
+╔════════════════════════════════════════════════╗
+║                                                ║
+║  ✓ ALL SMOKE TESTS PASSED!                    ║
+║                                                ║
+║  mlship 0.1.5 is working correctly!           ║
+║                                                ║
+╚════════════════════════════════════════════════╝
+```
+
+### Troubleshooting
+
+**Python 3.12 not found:**
+```bash
+# macOS
+brew install python@3.12
+
+# Ubuntu/Debian
+sudo apt install python3.12 python3.12-venv
+```
+
+**Script hangs:**
+- Check if port 8765 is already in use
+- Kill any existing mlship processes
+- The script automatically cleans up on exit
+
+**Tests fail:**
+- Check the server log: `/tmp/mlship-smoke-test-*/server.log`
+- Verify PyPI package was published correctly
+- Wait a few minutes if just published (CDN propagation)
+
+---
+
 ## Release Process
 
 (For maintainers)
