@@ -227,6 +227,7 @@ mlship is the **only zero-code tool** that supports sklearn, PyTorch, TensorFlow
 
 **🔄 Planned:**
 
+- 🔄 **More HuggingFace tasks** - Question answering, translation, summarization, NER (requires flexible input schemas)
 - 🔄 **PyTorch Hub integration** - Serve models directly from PyTorch Hub with `--source pytorch-hub`
 - 🔄 **TensorFlow Hub integration** - Serve models from TensorFlow Hub with `--source tensorflow-hub`
 - 🔄 **XGBoost & LightGBM support** - First-class support for gradient boosting frameworks
