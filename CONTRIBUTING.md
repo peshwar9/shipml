@@ -663,58 +663,270 @@ sudo apt install python3.12 python3.12-venv
 
 ---
 
+## Contributing Checklist
+
+**For Contributors:** Before submitting a pull request, complete this checklist:
+
+### 1. Code Changes
+
+- [ ] **Write/Update Tests**
+  - Add test cases for new features in `tests/`
+  - Update existing tests if behavior changed
+  - Ensure test coverage for edge cases
+
+- [ ] **Run Regression Tests**
+  ```bash
+  source .venv/bin/activate
+  pytest tests/ -v
+  ```
+  All existing tests must pass.
+
+- [ ] **Run Code Quality Checks**
+  ```bash
+  # Format code
+  black mlship/ tests/
+
+  # Lint code
+  ruff check --fix mlship/ tests/
+
+  # Type check (optional but recommended)
+  mypy mlship/
+  ```
+
+- [ ] **Test Manually**
+  - Test your changes with real models
+  - Verify error messages are helpful
+  - Check edge cases
+
+### 2. Documentation
+
+- [ ] **Update Documentation**
+  - Update `README.md` if adding new feature
+  - Update `QUICKSTART.md` with examples if user-facing
+  - Update `CONTRIBUTING.md` if changing workflow
+  - Add docstrings to new functions/classes
+
+- [ ] **Update CHANGELOG** (if exists)
+  - Add entry describing your changes
+
+### 3. Submit Pull Request
+
+- [ ] **Create Feature Branch**
+  ```bash
+  git checkout -b feature/your-feature-name
+  ```
+
+- [ ] **Commit with Clear Messages**
+  ```bash
+  git commit -m "feat: add benchmark command"
+  git commit -m "fix: resolve model loading issue"
+  git commit -m "docs: update quickstart guide"
+  ```
+
+- [ ] **Push Branch**
+  ```bash
+  git push origin feature/your-feature-name
+  ```
+
+- [ ] **Open Pull Request**
+  - Describe what your PR does
+  - Reference related issues (e.g., "Closes #123")
+  - Add screenshots/examples if relevant
+
+### 4. After PR Submission
+
+- [ ] **Wait for CI to Pass**
+  - GitHub Actions will run tests automatically
+  - Fix any failures before requesting review
+
+- [ ] **Address Review Comments**
+  - Respond to reviewer feedback
+  - Make requested changes
+  - Push updates to same branch
+
+- [ ] **Merge**
+  - Maintainer will merge after approval
+  - Delete your feature branch after merge
+
+**Quick Pre-PR Command:**
+```bash
+# Run all checks at once
+./pre_push.sh
+```
+
+---
+
 ## Release Process
 
-(For maintainers)
+**For Maintainers:** Publishing a new version to PyPI
 
-1. **Update version** in `pyproject.toml` and `mlship/__init__.py`
-   ```bash
-   # Change version line: version = "0.1.2"
-   git add pyproject.toml mlship/__init__.py
-   git commit -m "chore: bump version to 0.1.2"
-   ```
+### Pre-Release Checklist
 
-2. **Clean and build package**
-   ```bash
-   rm -rf dist/ build/ *.egg-info
-   python -m build
-   ```
+Before starting the release:
 
-3. **Test installation locally**
-   ```bash
-   uv pip install dist/mlship-0.1.2-py3-none-any.whl
-   mlship --version
-   ```
-Note: change the version number accordingly.
-4. **Test on TestPyPI first** ⚠️ **Important: Don't skip this!**
-   ```bash
-   twine upload --repository testpypi dist/*
-   # Test install from TestPyPI
-   pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple mlship
-   ```
+- [ ] All tests passing on `main` branch
+- [ ] All PRs for this release are merged
+- [ ] CHANGELOG updated (if exists)
+- [ ] Documentation updated for new features
 
-5. **Publish to PyPI** (only after TestPyPI works)
-   ```bash
-   twine upload dist/*
-   ```
+### Release Steps
 
-6. **Run post-release smoke test** ⚠️ **Critical: Validates the PyPI package**
-   ```bash
-   # Test the latest published version
-   ./scripts/post_release_smoke_test.sh
+#### 1. Update Version Numbers
 
-   # Or test a specific version
-   ./scripts/post_release_smoke_test.sh 0.1.5
-   ```
+Update version in **two files**:
 
-   This creates a fresh environment, installs from PyPI, and validates all QUICKSTART examples work correctly.
+**`pyproject.toml`:**
+```toml
+version = "0.2.0"
+```
 
-7. **Create git tag and push**
-   ```bash
-   git tag v0.1.2
-   git push origin main --tags
-   ```
-   Note: change tag versions accordingly
+**`mlship/__init__.py`:**
+```python
+__version__ = "0.2.0"
+```
+
+Commit the changes:
+```bash
+git add pyproject.toml mlship/__init__.py
+git commit -m "chore: bump version to 0.2.0"
+git push origin main
+```
+
+#### 2. Build Package
+
+```bash
+# Clean old builds
+rm -rf dist/ build/ *.egg-info
+
+# Build
+python -m build
+```
+
+Verify the build:
+```bash
+ls -lh dist/
+# Should show: mlship-0.2.0-py3-none-any.whl and mlship-0.2.0.tar.gz
+```
+
+#### 3. Test Installation Locally
+
+```bash
+# Install from wheel
+pip install dist/mlship-0.2.0-py3-none-any.whl
+
+# Verify version
+mlship --version
+# Should output: mlship version 0.2.0
+
+# Quick functionality test
+mlship --help
+```
+
+#### 4. Test on TestPyPI (Optional but Recommended)
+
+⚠️ **Recommended for major releases:**
+
+```bash
+# Upload to TestPyPI
+twine upload --repository testpypi dist/*
+
+# Test install from TestPyPI
+pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple mlship
+
+# Test it works
+mlship --version
+```
+
+#### 5. Publish to PyPI
+
+**This is irreversible! Double-check everything.**
+
+```bash
+twine upload dist/*
+```
+
+Wait 2-3 minutes for PyPI CDN propagation.
+
+#### 6. Run Post-Release Smoke Test
+
+⚠️ **Critical: Validates the published package**
+
+```bash
+# Test the latest version from PyPI
+./scripts/post_release_smoke_test.sh
+
+# Or test specific version
+./scripts/post_release_smoke_test.sh 0.2.0
+```
+
+This validates:
+- Package installs correctly from PyPI
+- All frameworks work (sklearn, PyTorch, TensorFlow, HuggingFace)
+- All QUICKSTART examples work
+- No import errors or missing dependencies
+
+**If smoke test fails:** The package is already published but broken. Immediately:
+1. Fix the issue
+2. Bump to patch version (e.g., 0.2.0 → 0.2.1)
+3. Republish
+
+#### 7. Create Git Tag
+
+```bash
+# Create annotated tag
+git tag -a v0.2.0 -m "Release v0.2.0: Add benchmark command"
+
+# Push tag to GitHub
+git push origin v0.2.0
+```
+
+#### 8. Create GitHub Release
+
+1. Go to: https://github.com/sudhanvalabs/mlship/releases/new
+2. Select tag: `v0.2.0`
+3. Release title: `v0.2.0 - Benchmark Command`
+4. Description (example):
+
+```markdown
+## What's New
+
+- 🎯 **Benchmark Command**: Measure model serving performance with `mlship benchmark`
+  - Latency metrics (avg, p50, p95, p99)
+  - Throughput measurement
+  - JSON output for automation
+  - Works with all frameworks
+
+## Installation
+
+```bash
+pip install mlship
+```
+
+## Full Changelog
+
+- feat: add benchmark command (#1)
+- fix: improve PyTorch model loading
+- docs: enhance quickstart guide
+
+**Full Changelog**: https://github.com/sudhanvalabs/mlship/compare/v0.1.5...v0.2.0
+```
+
+5. Click "Publish release"
+
+### Post-Release
+
+- [ ] Announce on LinkedIn/Twitter
+- [ ] Update any related blog posts
+- [ ] Close milestone (if using GitHub milestones)
+- [ ] Thank contributors
+
+### Version Numbering
+
+Follow [Semantic Versioning](https://semver.org/):
+
+- **Major** (1.0.0): Breaking changes
+- **Minor** (0.2.0): New features, backward compatible
+- **Patch** (0.1.6): Bug fixes, backward compatible
 
 For detailed publishing instructions, see [PUBLISHING.md](PUBLISHING.md).
 
