@@ -28,9 +28,21 @@ def start_server_background(
         ready_event: Event to signal when server is ready
     """
     import uvicorn
+    from mlship.loaders import get_loader
+
+    # Detect framework and load model
+    framework = detect_framework(model_path, source=source)
+    loader = get_loader(framework)
+    model = loader.load(model_path)
+
+    # Get model name
+    if isinstance(model_path, Path):
+        model_name = model_path.stem
+    else:
+        model_name = str(model_path).split("/")[-1]
 
     # Create the app
-    app = create_app(model_path, source=source)
+    app = create_app(model, loader, model_name, pipeline=None)
 
     # Signal that we're ready
     ready_event.set()
