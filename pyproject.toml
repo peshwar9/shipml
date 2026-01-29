@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mlship"
-version = "0.1.5"
+version = "0.2.0"
 description = "Turn ML models into APIs with one command"
 authors = [{name = "Sudhanva Labs", email = "contact@sudhanvalabs.com"}]
 license = {text = "MIT"}
@@ -30,6 +30,7 @@ dependencies = [
     "uvicorn[standard]>=0.24",
     "pydantic>=2.0",
     "python-multipart>=0.0.6",
+    "requests>=2.31",
 ]
 
 [project.optional-dependencies]
@@ -85,6 +86,9 @@ python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
 addopts = "-v --cov=mlship --cov-report=term-missing"
+markers = [
+    "slow: marks tests as slow (e.g., HuggingFace Hub downloads)",
+]
 filterwarnings = [
     "ignore::FutureWarning:keras.*",
     "ignore::DeprecationWarning:keras.*",

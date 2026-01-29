@@ -6,7 +6,6 @@ from fastapi.testclient import TestClient
 
 from mlship.pipeline import Pipeline
 
-
 # Define PyTorch model at module level (can't pickle local classes)
 try:
     import torch.nn as nn

@@ -20,6 +20,7 @@ Deploy your machine learning models locally in seconds - no Docker, no YAML, no 
 - ✅ **One-command deployment** - No configuration needed
 - ✅ **Multi-framework** - sklearn, PyTorch, TensorFlow, HuggingFace (local + Hub)
 - ✅ **HuggingFace Hub** - Serve models directly from Hub without downloading
+- ✅ **Built-in benchmarking** - Measure latency and throughput with `mlship benchmark`
 - ✅ **Auto-generated API** - REST API with interactive docs
 - ✅ **Works offline** - Zero internet dependency after installation
 - ✅ **Fast** - Deploy in seconds, predictions in milliseconds
@@ -109,9 +110,37 @@ mlship serve model.pkl --name "fraud-detector"
 
 # Custom preprocessing/postprocessing
 mlship serve model.pkl --pipeline my_module.MyPipeline
+
+# Benchmark performance
+mlship benchmark model.pkl --requests 1000
+
+# Benchmark with custom warmup and port
+mlship benchmark model.pkl --requests 500 --warmup 10 --port 9000
+
+# Benchmark with custom payload
+mlship benchmark model.pkl --payload '{"features": [5.1, 3.5, 1.4, 0.2]}'
+
+# Benchmark HuggingFace model
+mlship benchmark distilbert-base-uncased-finetuned-sst-2-english --source huggingface --requests 50
+
+# Benchmark with JSON output (for CI/CD)
+mlship benchmark model.pkl --output json > results.json
 ```
 
+**Benchmark options:**
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--requests N` | 100 | Number of benchmark requests |
+| `--warmup N` | 5 | Number of warmup requests |
+| `--port PORT` | 8000 | Server port |
+| `--payload JSON` | auto | Custom test payload as JSON string |
+| `--source` | local | Model source (`local` or `huggingface`) |
+| `--output` | text | Output format (`text` or `json`) |
+
 See [CONTRIBUTING.md](https://github.com/sudhanvalabs/mlship/blob/main/CONTRIBUTING.md) for custom pipeline documentation.
+
+See [QUICKSTART.md](https://github.com/sudhanvalabs/mlship/blob/main/QUICKSTART.md#benchmarking-your-model) for detailed benchmarking guide.
 
 ---
 
@@ -223,6 +252,7 @@ mlship is the **only zero-code tool** that supports sklearn, PyTorch, TensorFlow
 - ✅ **Multi-framework support** - sklearn, PyTorch, TensorFlow, HuggingFace
 - ✅ **HuggingFace Hub integration** - Serve models directly from Hub with `--source huggingface`
 - ✅ **PyTorch TorchScript support** - Full support for custom PyTorch models via TorchScript
+- ✅ **Built-in benchmarking** - Measure latency (p50/p95/p99) and throughput with `mlship benchmark`
 - ✅ **Zero-code deployment** - One command to serve any model
 - ✅ **Auto-generated REST API** - With interactive Swagger docs
 - ✅ **Custom pipelines** - Preprocessing/postprocessing support

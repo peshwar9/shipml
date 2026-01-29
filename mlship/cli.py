@@ -1,5 +1,6 @@
 """Command-line interface for mlship."""
 
+import json
 import sys
 from pathlib import Path
 
@@ -7,6 +8,7 @@ import click
 import uvicorn
 
 from mlship import __version__
+from mlship.benchmark import run_benchmark
 from mlship.errors import UnsupportedModelError, ModelLoadError
 from mlship.loaders import detect_framework, get_loader
 from mlship.server import create_app
@@ -20,13 +22,18 @@ def cli(ctx, version):
     """
     mlship - Turn ML models into APIs with one command.
 
+    Commands:
+
+      serve      Start API server for your model
+      benchmark  Measure model serving performance
+
     Examples:
 
       mlship serve model.pkl
 
       mlship serve model.pt --port 5000
 
-      mlship serve model.h5 --name "sentiment-analyzer"
+      mlship benchmark model.pkl --requests 1000
     """
     if version:
         click.echo(f"mlship version {__version__}")
@@ -262,6 +269,147 @@ def serve(
     except KeyboardInterrupt:
         click.echo()
         click.secho("\n👋 Shutting down...", fg="yellow")
+        click.echo()
+        sys.exit(0)
+
+    except Exception as e:
+        click.echo()
+        click.secho("❌ Unexpected Error", fg="red", bold=True, err=True)
+        click.echo()
+        click.echo(f"{type(e).__name__}: {e}", err=True)
+        click.echo()
+        click.secho(
+            "Please report this issue: https://github.com/sudhanvalabs/mlship/issues",
+            fg="yellow",
+            err=True,
+        )
+        click.echo()
+        sys.exit(1)
+
+
+@cli.command()
+@click.argument("model_file", type=str)
+@click.option("--port", default=8000, type=int, help="Port to run server on (default: 8000)")
+@click.option(
+    "--requests", default=100, type=int, help="Number of benchmark requests (default: 100)"
+)
+@click.option("--warmup", default=5, type=int, help="Number of warmup requests (default: 5)")
+@click.option(
+    "--source",
+    type=click.Choice(["local", "huggingface"], case_sensitive=False),
+    default="local",
+    help="Model source: 'local' for file paths (default) or 'huggingface' for Hub models",
+)
+@click.option(
+    "--output",
+    type=click.Choice(["text", "json"], case_sensitive=False),
+    default="text",
+    help="Output format: 'text' (default) or 'json'",
+)
+@click.option("--payload", default=None, type=str, help="Custom test payload as JSON string")
+def benchmark(
+    model_file: str, port: int, requests: int, warmup: int, source: str, output: str, payload: str
+):
+    """
+    Benchmark model serving performance.
+
+    Measures latency (avg, p50, p95, p99) and throughput for serving a model.
+
+    MODEL_FILE can be:
+      - Path to a trained model file (.pkl, .pt, .h5, etc.) [--source local]
+      - HuggingFace Hub model ID (e.g., 'bert-base-uncased') [--source huggingface]
+
+    Examples:
+
+      mlship benchmark model.pkl
+
+      mlship benchmark model.pkl --requests 1000
+
+      mlship benchmark gpt2 --source huggingface --requests 50
+
+      mlship benchmark model.pkl --output json > results.json
+
+      mlship benchmark model.pkl --payload '{"features": [1, 2, 3, 4]}'
+    """
+    # Handle local vs Hub models
+    if source == "local":
+        # Validate that local path exists
+        model_path_obj = Path(model_file)
+        if not model_path_obj.exists():
+            click.echo()
+            click.secho("❌ Error: File Not Found", fg="red", bold=True, err=True)
+            click.echo()
+            click.echo(f"The model file does not exist: {model_file}", err=True)
+            click.echo()
+            click.echo("If you're trying to load from HuggingFace Hub, use:", err=True)
+            click.echo(f"  mlship benchmark {model_file} --source huggingface", err=True)
+            click.echo()
+            sys.exit(1)
+
+        model_path = model_path_obj
+    else:  # source == "huggingface"
+        # For Hub models, keep as string
+        model_path = model_file
+
+    # Parse custom payload if provided
+    custom_payload = None
+    if payload:
+        try:
+            custom_payload = json.loads(payload)
+        except json.JSONDecodeError as e:
+            click.echo()
+            click.secho("❌ Error: Invalid JSON Payload", fg="red", bold=True, err=True)
+            click.echo()
+            click.echo(f"Failed to parse payload: {e}", err=True)
+            click.echo()
+            click.echo("Payload must be valid JSON, e.g.:", err=True)
+            click.echo("  --payload '{\"features\": [1.0, 2.0, 3.0, 4.0]}'", err=True)
+            click.echo()
+            sys.exit(1)
+
+    try:
+        # Run benchmark
+        results = run_benchmark(
+            model_path=model_path,
+            port=port,
+            num_requests=requests,
+            warmup=warmup,
+            source=source,
+            payload=custom_payload,
+            output_format=output,
+        )
+
+        # Output JSON if requested
+        if output == "json":
+            click.echo(json.dumps(results, indent=2))
+
+    except UnsupportedModelError as e:
+        click.echo()
+        click.secho("❌ Error: Unsupported Model Format", fg="red", bold=True, err=True)
+        click.echo()
+        click.echo(str(e), err=True)
+        click.echo()
+        sys.exit(1)
+
+    except ModelLoadError as e:
+        click.echo()
+        click.secho("❌ Error: Failed to Load Model", fg="red", bold=True, err=True)
+        click.echo()
+        click.echo(str(e), err=True)
+        click.echo()
+        sys.exit(1)
+
+    except RuntimeError as e:
+        click.echo()
+        click.secho("❌ Benchmark Error", fg="red", bold=True, err=True)
+        click.echo()
+        click.echo(str(e), err=True)
+        click.echo()
+        sys.exit(1)
+
+    except KeyboardInterrupt:
+        click.echo()
+        click.secho("\n👋 Benchmark cancelled", fg="yellow")
         click.echo()
         sys.exit(0)
 

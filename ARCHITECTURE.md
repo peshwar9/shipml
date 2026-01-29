@@ -140,11 +140,40 @@ mlship/
 │   ├── pytorch.py      # PyTorch loader
 │   ├── tensorflow.py   # TensorFlow/Keras loader
 │   └── huggingface.py  # HuggingFace Transformers loader
+├── benchmark.py        # Performance benchmarking engine
 ├── pipeline.py         # Custom pre/post processing
 ├── models.py           # Pydantic request/response models
 ├── errors.py           # Custom exceptions
 └── utils.py            # Helper utilities
 ```
+
+### Benchmark Flow
+
+1. **CLI** (`mlship benchmark model.pkl`)
+   - Detects framework from file extension
+   - Starts model server in a background process (`multiprocessing.Process`)
+   - Waits for server readiness (polls `/health` endpoint, 30s timeout)
+
+2. **Cold Start Measurement**
+   - Times the first prediction request after server startup
+   - Captures model initialization + first inference overhead
+
+3. **Warmup Phase**
+   - Runs configurable warmup requests (default: 5)
+   - Primes caches and JIT compilation paths
+
+4. **Benchmark Phase**
+   - Runs configurable number of requests (default: 100)
+   - Records per-request latency in milliseconds
+   - Calculates statistics: avg, min, p50, p95, p99, max, throughput (RPS)
+
+5. **Cleanup**
+   - Gracefully terminates background server process
+   - Falls back to kill if terminate times out (5s)
+
+6. **Output**
+   - Text format: human-readable table to stdout
+   - JSON format: machine-parseable for CI/CD (`--output json`)
 
 ### Request Flow
 

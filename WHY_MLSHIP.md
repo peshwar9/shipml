@@ -39,7 +39,7 @@ Same command pattern. Same API format. Same workflow.
 
 | Tool | Frameworks Supported | Code Required | Best For |
 |------|---------------------|---------------|----------|
-| **mlship** | sklearn, PyTorch, TF, HF | **Zero** | Multi-framework teams, rapid prototyping, learning |
+| **mlship** | sklearn, PyTorch, TF, HF | **Zero** | Multi-framework teams, rapid prototyping, learning, benchmarking |
 | transformers-serve | HuggingFace only | Zero | HF models exclusively |
 | vLLM | LLMs only | Zero | Production LLM serving (high performance) |
 | Ollama | LLMs only | Zero | Local LLM chat interfaces |
@@ -103,7 +103,22 @@ curl -X POST http://localhost:8000/predict \
 
 Your application code doesn't need to know which framework you're using.
 
-### 5. Educational Sweet Spot
+### 5. Built-in Performance Benchmarking
+
+Measure model serving performance without external tools:
+
+```bash
+# Benchmark any model with one command
+mlship benchmark model.pkl --requests 100
+
+# Compare frameworks with JSON output
+mlship benchmark model.pt --output json > pytorch_results.json
+mlship benchmark model.pkl --output json > sklearn_results.json
+```
+
+Get cold start latency, avg/min/p50/p95/p99/max latency, and throughput (RPS) — useful for framework comparison, performance regression testing, and CI/CD integration. No other zero-code serving tool includes built-in benchmarking.
+
+### 6. Educational Sweet Spot
 
 Perfect for courses, tutorials, and learning:
 

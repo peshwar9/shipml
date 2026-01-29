@@ -11,7 +11,6 @@ import pytest
 import shutil
 from fastapi.testclient import TestClient
 
-
 # Define PyTorch model at module level (can't pickle local classes)
 try:
     import torch.nn as nn

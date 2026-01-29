@@ -416,6 +416,125 @@ mlship serve model.pkl --name "fraud-detector"
 
 ---
 
+## Benchmarking Your Model
+
+mlship includes a built-in benchmark command to measure model serving performance.
+
+### Basic Benchmarking
+
+```bash
+mlship benchmark model.pkl
+```
+
+This runs 100 requests and shows:
+- Cold start latency
+- Average latency
+- Percentiles (P50, P95, P99)
+- Throughput (requests/sec)
+
+### Example Output
+
+```
+==================================================
+Model: sklearn_model.pkl
+Framework: sklearn
+Warmup requests: 5
+Benchmark requests: 100
+==================================================
+
+Measuring cold start latency...
+Cold start: 0.234s
+
+Warming up...
+Warmup: 5/5
+
+Running 100 requests...
+Progress: 100/100
+
+==================================================
+BENCHMARK RESULTS
+==================================================
+
+Cold Start:     234.00ms
+
+Performance Metrics:
+  Average:       45.23ms
+  Min:           32.10ms
+  P50 (Median):  44.50ms
+  P95:           67.80ms
+  P99:           89.20ms
+  Max:           102.30ms
+
+Throughput:     ~22.1 requests/sec
+==================================================
+```
+
+### Advanced Options
+
+**More requests:**
+```bash
+mlship benchmark model.pkl --requests 1000
+```
+
+**JSON output (for automation):**
+```bash
+mlship benchmark model.pkl --output json > results.json
+```
+
+**Custom payload:**
+```bash
+mlship benchmark model.pkl --payload '{"features": [1.0, 2.0, 3.0, 4.0]}'
+```
+
+**Benchmark HuggingFace Hub model:**
+```bash
+mlship benchmark distilbert-base-uncased-finetuned-sst-2-english --source huggingface --requests 20 --warmup 3
+```
+
+The benchmark command handles everything automatically:
+- ✅ Detects HuggingFace model and downloads it (first time only, then cached)
+- ✅ Starts mlship server in background
+- ✅ Runs warmup requests to stabilize performance
+- ✅ Measures cold start latency (first prediction)
+- ✅ Runs benchmark requests and collects metrics
+- ✅ Shows detailed performance results
+- ✅ Stops server and cleans up
+
+**Custom port:**
+```bash
+mlship benchmark model.pkl --port 5000
+```
+
+### Understanding Benchmark Results
+
+**Cold Start Time:**
+- First run: ~300-400ms (model loads from disk)
+- Subsequent runs: ~30-50ms (model cached)
+- This is normal - production keeps models in memory
+
+**Latency Variance:**
+- 15-30% variance between runs is normal
+- Caused by: CPU throttling, background processes, OS scheduler
+- Run with `--requests 1000` for more stable averages
+- **P95/P99 matter** - these show worst-case latency
+
+**Example comparison:**
+```bash
+# Compare sklearn vs HuggingFace performance
+mlship benchmark sklearn_model.pkl --requests 100
+mlship benchmark distilbert-base-uncased-finetuned-sst-2-english --source huggingface --requests 100
+```
+
+### When to Benchmark
+
+- Before deploying to production
+- After model changes
+- To compare different model formats (sklearn vs PyTorch vs TensorFlow)
+- To validate performance requirements (e.g., "P95 must be < 50ms")
+- To detect performance regressions
+
+---
+
 ## Framework Support
 
 | Framework | Install | Serve Command |
