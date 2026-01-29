@@ -131,6 +131,11 @@ class TestServeCommandCLI:
             time.sleep(0.5)
         return False
 
+    @pytest.mark.skipif(
+        IS_WINDOWS,
+        reason="Subprocess-based serve tests unreliable on Windows CI; "
+        "serve is covered by test-frameworks CI job on Windows",
+    )
     def test_serve_sklearn_cli(self, sklearn_model_file):
         """Test mlship serve with sklearn model."""
         port = 8101
@@ -151,6 +156,11 @@ class TestServeCommandCLI:
         finally:
             self.stop_serve_process(proc)
 
+    @pytest.mark.skipif(
+        IS_WINDOWS,
+        reason="Subprocess-based serve tests unreliable on Windows CI; "
+        "serve is covered by test-frameworks CI job on Windows",
+    )
     def test_serve_pytorch_cli(self, pytorch_model_file):
         """Test mlship serve with PyTorch model."""
         port = 8102
@@ -171,6 +181,11 @@ class TestServeCommandCLI:
         finally:
             self.stop_serve_process(proc)
 
+    @pytest.mark.skipif(
+        IS_WINDOWS,
+        reason="Subprocess-based serve tests unreliable on Windows CI; "
+        "serve is covered by test-frameworks CI job on Windows",
+    )
     def test_serve_tensorflow_cli(self, tensorflow_model_file):
         """Test mlship serve with TensorFlow model."""
         port = 8103
@@ -192,6 +207,11 @@ class TestServeCommandCLI:
             self.stop_serve_process(proc)
 
     @pytest.mark.slow
+    @pytest.mark.skipif(
+        IS_WINDOWS,
+        reason="Subprocess-based serve tests unreliable on Windows CI; "
+        "serve is covered by test-frameworks CI job on Windows",
+    )
     def test_serve_huggingface_hub_cli(self):
         """Test mlship serve with HuggingFace Hub model."""
         pytest.importorskip("transformers")
